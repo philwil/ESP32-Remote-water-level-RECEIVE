@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Water Level Monitor</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content="60" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+
+  <body>
+    <header>
+      <h1>Water Level Monitor</h1>
+      <h2>Network Settings</h2>
+      <p>%FormattedDate% %FormattedTime%</p>
+    </header>
+    <main>
+      <h3>WiFi SSID: %WIFISSID%</h3>
+      <table>
+        <tr>
+          <td>Local IP:</td>
+          <td>%LocalIP%</td>
+        </tr>
+        <tr>
+          <td>Local Mac:</td>
+          <td>%LocalMac%</td>
+        </tr>
+        <tr>
+          <td>Local Sub Net:</td>
+          <td>%LocalSubNet%</td>
+        </tr>
+        <tr>
+          <td>Local Gateway:</td>
+          <td>%LocalGateway%</td>
+        </tr>
+        <tr>
+          <td>Local DNS:</td>
+          <td>%LocalDNS%</td>
+        </tr>
+        <tr>
+          <td>WiFi Status:</td>
+          <td>%WebStatus%</td>
+        </tr>
+        <tr>
+          <td>WiFi RSSI:</td>
+          <td>%WebRSSI%</td>
+        </tr>
+      </table>
+    </main>
+    <footer>
+      <nav>
+        <ul class="selection">
+          <li><a href="/">Home</a></li>
+          <li><a href="/system">System</a></li>
+          <li class="current"><a href="/network">Network</a></li>
+          <li><a href="/restart">Restart</a></li>
+        </ul>
+      </nav>
+    </footer>
+  </body>
+</html>

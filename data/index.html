@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Water Level Monitor</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content="60" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+
+  <body>
+    <header>
+      <h1>Water Level Monitor</h1>
+      <h2>Readings</h2>
+      <p>Version: %Version%</p>
+      <p>%FormattedDate% %FormattedTime%</p>
+    </header>
+    <main>
+      <h3>Lora RSSI: %RSSI%, SNR: %SNR%</h3>
+      <p>Last good packed received: %RxDate% %RxTime%</p>
+      <table>
+        <tr>
+          <td>Last Good Packet:</td>
+          <td>%Packet%</td>
+          <td>Size:</td>
+          <td>%PacketSize%</td>
+        </tr>
+        <tr>
+          <td>Water:</td>
+          <td>%WaterLevel%</td>
+        </tr>
+        <tr>
+          <td>Voltage:</td>
+          <td>%Volts%</td>
+        </tr>
+      </table>
+    </main>
+    <footer>
+      <nav>
+        <ul class="selection">
+          <li class="current"><a href="/">Home</a></li>
+          <li><a href="/system">System</a></li>
+          <li><a href="/network">Network</a></li>
+          <li><a href="/restart">Restart</a></li>
+        </ul>
+      </nav>
+    </footer>
+  </body>
+</html>

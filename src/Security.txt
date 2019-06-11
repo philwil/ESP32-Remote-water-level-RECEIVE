@@ -1,0 +1,2 @@
+const char WiFiSSID[] = "YourSSID";
+const char WiFiPassword[] = "YourPassword";
