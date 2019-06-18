@@ -44,41 +44,44 @@ const IPAddress WiFiSecondaryDNS(8, 8, 4, 4);   //optional
 const byte LEDOn = HIGH;
 const byte LEDOff = LOW;
 // delays
-const int SerialStartDelay = 200; //delay after starting the serial interface to let things settle
+const int SerialStartDelay = 100; //delay after starting the serial interface to let things settle
 // Main Loop delays
 const int MainLoopCycleTime = 100;   // have a leisurely romp through the main loop
 const int OTALoopCycleTime = 50;     // stop OTA being in a tight loop
 const int XStartDisplayDelay = 5000; // delay the restart to give time for the web page to be displayed
 
-// NTP refresh time
-const unsigned long NTPRefresh = 60000 * 60 * 24; // refresh time in milliseconds, i.e. once per day
+// NTP
+const unsigned long NTPRefresh = 60000 * 60 * 24;  // refresh time in milliseconds, i.e. once per day
+const char NTPServerName[] = "msltime.irl.cri.nz"; // New Zealand time server, use the closest one to your location
 // delay to display message on OLED display
-const int OLEDDisplayDelay = 400; // pause after displaying a message while starting up so that they can be read
+const int OLEDDisplayDelay = 400; // pause after displaying a message while starting up so that it can be read
 // Lora packet
-const String PacketPreAmble = "A1A"; // PacketPreAmble - received packet must start with this
-const int MaxPacketSize = 10;        // Sanity check, anything longer than this is a bad packet
+const String LoraPacketPreAmble = "A1A"; // LoraPacketPreAmble - received packet must start with this
+const int LoraMaxPacketSize = 10;        // Sanity check, anything longer than this is a bad packet
 
 // Web Server
 AsyncWebServer WebServer(80);
 // NTP Server
 WiFiUDP NTPUDP;
 NTP NTPTime(NTPUDP);
-String FormattedDate = "";
+String FormattedDate = ""; // used in the web pages
 String FormattedTime = "";
 // SSD1306
 SSD1306 OLEDDisplay(0x3c, OLEDSDA, OLEDSCL);
 // Lora packets
-String RSSI = "";
-String SNR = "";
-String PackSize = "";
-String Packet = "";
-String LastGoodPacket = "";
-String LastGoodPacketSize = "";
+String LoraRSSI = "";
+String LoraSNR = "";
+String LoraPackSize = "";
+String LoraPacket = "";
+String LoraLastGoodPacket = "";
+String LoraLastGoodPacketSize = "";
 String WaterLevel = "";
 String VoltageLevel = "";
+String LoraRxDate = "";
+String LoraRxTime = "";
 float Volts = 0.0;
-bool PacketFlag = false; // indicates if a packet has been received by the lora receive callback
-int PacketSize = 0;      // holds the current packet size
+bool LoraPacketFlag = false; // indicates if a packet has been received by the lora receive callback
+int LoraPacketSize = 0;      // holds the current packet size
 // WiFi info
 String LocalIP = "";
 String LocalMac = "";
@@ -87,8 +90,6 @@ String LocalGateway = "";
 String LocalDNS = "";
 String WebStatus = "";
 String WebRSSI = "";
-String RxDate = "";
-String RxTime = "";
 
 // sub routines
 //-----------------------------------------------
@@ -100,7 +101,6 @@ void OLEDMessage(String OLEDText) // must be first as used immediately after ser
   OLEDDisplay.display();
 }
 
-// format a numeric string with commas, mainly used to display the system information values, i.e. 240,000,000MHz clock speed
 // Format a numeric string with commas, mainly used to display the system information values and file sizes, i.e. 240,000,000MHz clock speed
 // Do not use for numbers with decimal places or non-mumerics
 String FormatString(String RawNumber)
@@ -232,37 +232,38 @@ void FlashLED(int OnTime, int OffTime, int Repeat)
 
 void LoraProcessing() // process new packet, called from main loop based on packet flag
 {
-  Packet = ""; // global as also used in web server
-               // read packet
+  LoraPacket = ""; // global as also used in web server
+                   // read packet
   while (LoRa.available())
   {
-    Packet += (char)LoRa.read();
+    LoraPacket += (char)LoRa.read();
   }
-  RSSI = String(LoRa.packetRssi());  // global as also used in web server
-  SNR = String(LoRa.packetSnr(), 2); // global as also used in web server
-  PackSize = String(PacketSize);     // can't use raw PacketSize in OLED display text, must be string, packetsize set by onReceive routine
+  LoraRSSI = String(LoRa.packetRssi());  // global as also used in web server
+  LoraSNR = String(LoRa.packetSnr(), 2); // global as also used in web server
+  LoraPackSize = String(LoraPacketSize); // can't use raw LoraPacketSize in OLED display text, must be string, LoraPacketSize set by onReceive routine
   OLEDDisplay.clear();
-  OLEDDisplay.drawString(0, 0, "RSSI: " + RSSI + ", SNR: " + SNR);
-  OLEDDisplay.drawString(0, 12, "Received " + PackSize + " bytes");
+  OLEDDisplay.clear();
+  OLEDDisplay.drawString(0, 0, "RSSI: " + LoraRSSI + ", SNR: " + LoraSNR);
+  OLEDDisplay.drawString(0, 12, "Received " + LoraPackSize + " bytes");
 
   // see if it is valid and for us
-  if (PacketSize <= MaxPacketSize)
+  if (LoraPacketSize <= LoraMaxPacketSize)
   {
-    OLEDDisplay.drawString(0, 24, Packet);
-    if (Packet.startsWith(PacketPreAmble)) // only process if it has the correct preamble otherwise ignore it as it's not for us
+    OLEDDisplay.drawString(0, 24, LoraPacket);
+    if (LoraPacket.startsWith(LoraPacketPreAmble)) // only process if it has the correct preamble otherwise ignore it as it's not for us
     {
       // unpack received packet
-      WaterLevel = Packet.substring(3, 4); // global as also used in web server
-      VoltageLevel = Packet.substring(4);
+      WaterLevel = LoraPacket.substring(3, 4); // global as also used in web server
+      VoltageLevel = LoraPacket.substring(4);
       Volts = VoltageLevel.toFloat() / 100.0; // global as also used in web server.  Sender has multiplied voltage by 100 to make it an integer so divide to get fraction back
-      RxDate = FormattedDate;                 // keep the received date and time
-      RxTime = FormattedTime;
-      LastGoodPacket = Packet;
-      LastGoodPacketSize = PackSize;
+      LoraRxDate = FormattedDate;             // keep the received date and time
+      LoraRxTime = FormattedTime;
+      LoraLastGoodPacket = LoraPacket;
+      LoraLastGoodPacketSize = LoraPackSize;
       OLEDDisplay.drawString(0, 36, "Water: " + WaterLevel + ", Voltage: " + Volts);
-      OLEDDisplay.drawString(0, 48, RxDate + " " + RxTime);
-      Serial.println("Packet received: " + RxDate + " " + RxTime + " - Packet:" + Packet + ", Size:" + PacketSize);
-      Serial.println("Lora RSSI: " + RSSI + ", SNR: " + SNR);
+      OLEDDisplay.drawString(0, 48, LoraRxDate + " " + LoraRxTime);
+      Serial.println("Packet received: " + LoraRxDate + " " + LoraRxTime + " - Packet:" + LoraPacket + ", Size:" + LoraPacketSize);
+      Serial.println("Lora RSSI: " + LoraRSSI + ", SNR: " + LoraSNR);
       Serial.println("Water: " + WaterLevel + ", Voltage: " + Volts);
       Serial.println();
     }
@@ -273,18 +274,18 @@ void LoraProcessing() // process new packet, called from main loop based on pack
     }
   }
   else
-  { // packet is longer than MaxPacketSize
-    OLEDDisplay.drawString(0, 24, Packet.substring(0, MaxPacketSize));
+  { // packet is longer than LoraMaxPacketSize
+    OLEDDisplay.drawString(0, 24, LoraPacket.substring(0, LoraMaxPacketSize));
     OLEDDisplay.drawString(0, 36, "Packet too long");
     OLEDDisplay.drawString(0, 48, FormattedDate + " " + FormattedTime);
   }
   OLEDDisplay.display();
 }
 
-void LoraReceive(int packetSize) // a packet has been received, set flag for processing
+void LoraReceive(int packetSize) // a packet has been received, set flag for processing. packetSize from Lora.onReceive
 {
-  PacketFlag = true;       // semaphore for lora processing as can not put display commands in same callback as lora processing
-  PacketSize = packetSize; // global as used in Lora and web server
+  LoraPacketFlag = true;       // semaphore for lora processing as can not put display commands in same callback as lora processing
+  LoraPacketSize = packetSize; // global as used in Lora and web server
 }
 
 // routines to process web page variables, called iteratively until all page variables have been processed
@@ -320,7 +321,7 @@ String ProcessNetwork(const String &var) // process the network.html variables
   if (var == "WebStatus")
     return WebStatus;
   if (var == "WebRSSI")
-    return WebRSSI;
+    return String(int(WiFi.RSSI()));
   return String();
 }
 
@@ -333,17 +334,17 @@ String ProcessWater(const String &var) // process the water.html variables
   if (var == "Version")
     return Version;
   if (var == "RxDate")
-    return RxDate;
+    return LoraRxDate;
   if (var == "RxTime")
-    return RxTime;
+    return LoraRxTime;
   if (var == "RSSI")
-    return RSSI;
+    return LoraRSSI;
   if (var == "SNR")
-    return SNR;
+    return LoraSNR;
   if (var == "Packet")
-    return LastGoodPacket;
+    return LoraLastGoodPacket;
   if (var == "PacketSize")
-    return String(LastGoodPacketSize);
+    return String(LoraLastGoodPacketSize);
   if (var == "WaterLevel")
     return WaterLevel;
   if (var == "Volts")
@@ -417,9 +418,6 @@ void OTACore0(void *p) // run OTA on core 0, makes it responsive
   });
   // start OTA      //
   ArduinoOTA.begin(); //
-  OLEDMessage("OTA started");
-  Serial.println("OTA started");
-  vTaskDelay(pdMS_TO_TICKS(OLEDDisplayDelay));
 
   while (true)
   {
@@ -464,9 +462,9 @@ void setup()
   vTaskDelay(pdMS_TO_TICKS(OLEDDisplayDelay));
 
   // Start NTP client
-  NTPTime.ntpServer("msltime.irl.cri.nz");
+  NTPTime.ntpServer(NTPServerName);
   NTPTime.updateInterval(NTPRefresh);
-  NTPTime.ruleSTD("NZST", First, Sun, Apr, 3, 12 * 60);     // first sunday in April at 3:00, timezone 12 hours
+  NTPTime.ruleSTD("NZST", First, Sun, Apr, 2, 12 * 60);     // first sunday in April at 2:00, timezone 12 hours
   NTPTime.ruleDST("NZDT", Last, Sun, Sep, 3, 12 * 60 + 60); // last sunday in September at 3:00, timezone 13 hours
   NTPTime.begin();
   NTPTime.update();
@@ -488,6 +486,9 @@ void setup()
   WebServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/index.html", String(), false, ProcessWater);
   });
+  WebServer.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/favicon.ico", "image/icon");
+  });
   WebServer.on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/style.css", "text/css");
   });
@@ -506,6 +507,10 @@ void setup()
     request->send(200, "text/html", "<h1>ESP being restarted</h1>");
     vTaskDelay(pdMS_TO_TICKS(XStartDisplayDelay)); // make sure everything is sent and displayed
     ESP.restart();
+  });
+  // Catch all
+  WebServer.onNotFound([](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/index.html", String(), false, ProcessWater);
   });
 
   // start the async web server
@@ -534,6 +539,9 @@ void setup()
 
   // start OTA monitoring task on core 0
   xTaskCreatePinnedToCore(OTACore0, "OTACore0", 4096, NULL, 0, NULL, 0);
+  OLEDMessage("OTA started");
+  Serial.println("OTA started");
+  vTaskDelay(pdMS_TO_TICKS(OLEDDisplayDelay));
 
   // finished setup
   OLEDMessage("Setup finished");
@@ -547,9 +555,9 @@ void loop()
   NTPTime.update(); // setup the date/time strings used for the OLED display, serial out, and web
   FormattedDate = NTPTime.formattedTime("%d %B %Y");
   FormattedTime = NTPTime.formattedTime("%T");
-  if (PacketFlag) // if we have a packet then process it, OLED display commands can't be in the receive callback so need to process independantly
+  if (LoraPacketFlag) // if we have a packet then process it, OLED display commands can't be in the receive callback so need to process independantly
   {
-    PacketFlag = false;
+    LoraPacketFlag = false;
     FlashLED(100, 100, 2);
     LoraProcessing();
   }
