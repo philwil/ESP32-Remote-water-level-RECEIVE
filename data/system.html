@@ -1,59 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <title>Water Level Monitor</title>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="refresh" content="60" />
-    <link rel="stylesheet" type="text/css" href="style.css" />
-  </head>
 
-  <body>
-    <header>
-      <h1>Water Level Monitor</h1>
-      <h2>System Settings</h2>
-      <p>%FormattedDate% %FormattedTime%</p>
-    </header>
-    <main>
-      <br />
-      <table>
-        <tr>
-          <td>Chip ID:</td>
-          <td>%ChipID%</td>
-          <td>Chip Revision:</td>
-          <td>%ChipRevision%</td>
-          <td>Chip Frequency:</td>
-          <td>%ChipFrequency%</td>
-        </tr>
-        <tr>
-          <td>Flash Size:</td>
-          <td>%FlashSize%</td>
-          <td>Flash Speed:</td>
-          <td>%FlashSpeed%</td>
-        </tr>
-        <tr>
-          <td>Heap Size:</td>
-          <td>%HeapSize%</td>
-          <td>Heap Free:</td>
-          <td>%FreeHeap%</td>
-        </tr>
-        <tr>
-          <td>Sketch Size:</td>
-          <td>%SketchSize%</td>
-          <td>Sketch Space Free:</td>
-          <td>%SketchSpaceFree%</td>
-        </tr>
-      </table>
-    </main>
-    <footer>
-      <nav>
-        <ul class="selection">
-          <li><a href="/">Home</a></li>
-          <li class="current"><a href="/system">System</a></li>
-          <li><a href="/network">Network</a></li>
-          <li><a href="/restart">Restart</a></li>
-        </ul>
-      </nav>
-    </footer>
-  </body>
+<head>
+  <title>Water Level Monitor</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" type="text/css" href="/style.css" />
+</head>
+
+<body>
+  <header>
+    <h1>Water Level Monitor</h1>
+    <h2>System Settings</h2>
+    <p>%FormattedDate% %FormattedTime%</p>
+  </header>
+  <main>
+    <br />
+    <table>
+      <tr>
+        <td>Chip ID:</td>
+        <td>%ChipID%</td>
+        <td>Chip Revision:</td>
+        <td>%ChipRevision%</td>
+        <td>Chip Frequency:</td>
+        <td>%ChipFrequency%</td>
+      </tr>
+      <tr>
+        <td>Flash Size:</td>
+        <td>%FlashSize%</td>
+        <td>Flash Speed:</td>
+        <td>%FlashSpeed%</td>
+      </tr>
+      <tr>
+        <td>Heap Size:</td>
+        <td>%HeapSize%</td>
+        <td>Heap Free:</td>
+        <td>%FreeHeap%</td>
+      </tr>
+      <tr>
+        <td>Sketch Space Size:</td>
+        <td>%SketchSpaceFree%</td>
+        <td>Sketch Size:</td>
+        <td>%SketchSize%</td>
+      </tr>
+    </table>
+  </main>
+  <footer>
+    <nav>
+      <ul class="selection">
+        <li><a href="/">Home</a></li>
+        <li class="current"><a href="/system">System</a></li>
+        <li><a href="/network">Network</a></li>
+        <li><a href="/restart">Restart</a></li>
+      </ul>
+    </nav>
+  </footer>
+</body>
+
 </html>
